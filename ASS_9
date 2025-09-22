@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX 100000
+typedef struct {
+    int arr[MAX];
+    int top;
+} Stack;
+void init(Stack *s) {
+    s->top = -1;
+}
+int isEmpty(Stack *s) {
+    return s->top == -1;
+}
+void push(Stack *s, int x) {
+    s->arr[++s->top] = x;
+}
+int pop(Stack *s) {
+    return s->arr[s->top--];
+}
+int peek(Stack *s) {
+    return s->arr[s->top];
+}
+Stack s1, s2;
+void transfer() {
+    while (!isEmpty(&s1)) {
+        push(&s2, pop(&s1));
+    }
+}
+void enqueue(int x) {
+    push(&s1, x);
+}
+void dequeue() {
+    if (isEmpty(&s2)) {
+        transfer();
+    }
+    if (!isEmpty(&s2)) pop(&s2);
+}
+void front() {
+    if (isEmpty(&s2)) {
+        transfer();
+    }
+    if (!isEmpty(&s2)) {
+        printf("%d\n", peek(&s2));
+    }
+}
+int main() {
+    init(&s1);
+    init(&s2);
+    int q;
+    scanf("%d", &q);
+    while (q--) {
+        int type;
+        scanf("%d", &type);
+        if (type == 1) {
+            int x;
+            scanf("%d", &x);
+            enqueue(x);
+        } else if (type == 2) {
+            dequeue();
+        } else if (type == 3) {
+            front();
+        }
+    }
+    return 0;
+}
