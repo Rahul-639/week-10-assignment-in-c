@@ -1,0 +1,137 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define HASH_SIZE 10007  // large prime for hashing
+typedef struct Node {
+    int key, value;
+    struct Node *prev, *next;
+} Node;
+typedef struct Entry {
+    int key;
+    Node *node;
+    struct Entry *next;
+} Entry;
+typedef struct {
+    int capacity, size;
+    Node *head, *tail;
+    Entry *hash[HASH_SIZE];
+} LRUCache;
+int hashFunc(int key) {
+    return key % HASH_SIZE;
+}
+Node* createNode(int key, int value) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->key = key;
+    node->value = value;
+    node->prev = node->next = NULL;
+    return node;
+}
+LRUCache* createCache(int capacity) {
+    LRUCache* cache = (LRUCache*)malloc(sizeof(LRUCache));
+    cache->capacity = capacity;
+    cache->size = 0;
+    cache->head = cache->tail = NULL;
+    for (int i = 0; i < HASH_SIZE; i++) cache->hash[i] = NULL;
+    return cache;
+}
+void insertHash(LRUCache* cache, int key, Node* node) {
+    int h = hashFunc(key);
+    Entry* entry = (Entry*)malloc(sizeof(Entry));
+    entry->key = key;
+    entry->node = node;
+    entry->next = cache->hash[h];
+    cache->hash[h] = entry;
+}
+Node* findHash(LRUCache* cache, int key) {
+    int h = hashFunc(key);
+    Entry* cur = cache->hash[h];
+    while (cur) {
+        if (cur->key == key) return cur->node;
+        cur = cur->next;
+    }
+    return NULL;
+}
+void removeHash(LRUCache* cache, int key) {
+    int h = hashFunc(key);
+    Entry* cur = cache->hash[h];
+    Entry* prev = NULL;
+    while (cur) {
+        if (cur->key == key) {
+            if (prev) prev->next = cur->next;
+            else cache->hash[h] = cur->next;
+            free(cur);
+            return;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+}
+void moveToTail(LRUCache* cache, Node* node) {
+    if (cache->tail == node) return;
+    if (node->prev) node->prev->next = node->next;
+    if (node->next) node->next->prev = node->prev;
+    if (cache->head == node) cache->head = node->next;
+    node->prev = cache->tail;
+    node->next = NULL;
+    if (cache->tail) cache->tail->next = node;
+    cache->tail = node;
+}
+void removeHead(LRUCache* cache) {
+    if (!cache->head) return;
+    Node* node = cache->head;
+    removeHash(cache, node->key);
+
+    if (cache->head == cache->tail) {
+        cache->head = cache->tail = NULL;
+    } else {
+        cache->head = node->next;
+        cache->head->prev = NULL;
+    }
+    free(node);
+    cache->size--;
+}
+int get(LRUCache* cache, int key) {
+    Node* node = findHash(cache, key);
+    if (!node) return -1;
+    moveToTail(cache, node);
+    return node->value;
+}
+void put(LRUCache* cache, int key, int value) {
+    Node* node = findHash(cache, key);
+    if (node) {
+        node->value = value;
+        moveToTail(cache, node);
+    } else {
+        Node* newNode = createNode(key, value);
+        insertHash(cache, key, newNode);
+        if (cache->size == cache->capacity) {
+            removeHead(cache);
+        }
+        if (!cache->head) {
+            cache->head = cache->tail = newNode;
+        } else {
+            cache->tail->next = newNode;
+            newNode->prev = cache->tail;
+            cache->tail = newNode;
+        }
+        cache->size++;
+    }
+}
+int main() {
+    int cap, Q;
+    scanf("%d %d", &cap, &Q);
+    LRUCache* cache = createCache(cap);
+    for (int i = 0; i < Q; i++) {
+        char op[5];
+        scanf("%s", op);
+        if (op[0] == 'P') { 
+            int x, y;
+            scanf("%d %d", &x, &y);
+            put(cache, x, y);
+        } else {  
+            int x;
+            scanf("%d", &x);
+            printf("%d\n", get(cache, x));
+        }
+    }
+    return 0;
+}
