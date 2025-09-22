@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+typedef struct {
+    int deadline;
+    int profit;
+} Job;
+int cmp(const void* a, const void* b) {
+    Job* j1 = (Job*)a;
+    Job* j2 = (Job*)b;
+    return j2->profit - j1->profit;
+}
+int findMaxDeadline(Job jobs[], int n) {
+    int maxD = 0;
+    for (int i = 0; i < n; i++) {
+        if (jobs[i].deadline > maxD)
+            maxD = jobs[i].deadline;
+    }
+    return maxD;
+}
+void jobSequencing(Job jobs[], int n) {
+    qsort(jobs, n, sizeof(Job), cmp);
+    int maxDeadline = findMaxDeadline(jobs, n);
+    int slot[maxDeadline + 1];
+    for (int i = 0; i <= maxDeadline; i++) slot[i] = -1;
+    int countJobs = 0, totalProfit = 0;
+
+    for (int i = 0; i < n; i++) {
+        /
+        for (int t = jobs[i].deadline; t > 0; t--) {
+            if (slot[t] == -1) {
+                slot[t] = i; 
+                countJobs++;
+                totalProfit += jobs[i].profit;
+                break;
+            }
+        }
+    }
+
+    printf("%d %d\n", countJobs, totalProfit);
+}
+int main() {
+    int n;
+    scanf("%d", &n);
+    Job jobs[n];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &jobs[i].deadline);
+    }
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &jobs[i].profit);
+    }
+    jobSequencing(jobs, n);
+    return 0;
+}
