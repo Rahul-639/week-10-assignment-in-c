@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define MAX 100005  // arr[i] <= 1e5
+typedef struct {
+    int value;
+    int freq;
+} Element;
+int cmp(const void *a, const void *b) {
+    Element *e1 = (Element*)a;
+    Element *e2 = (Element*)b;
+
+    if (e1->freq != e2->freq)
+        return e2->freq - e1->freq;  
+    else
+        return e2->value - e1->value; 
+}
+int main() {
+    int n, k;
+    scanf("%d", &n);
+    int arr[n];
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+    scanf("%d", &k);
+    int freq[MAX] = {0};
+    for (int i = 0; i < n; i++) {
+        freq[arr[i]]++;
+    }
+    Element elems[n];
+    int distinct = 0;
+    for (int i = 0; i < MAX; i++) {
+        if (freq[i] > 0) {
+            elems[distinct].value = i;
+            elems[distinct].freq = freq[i];
+            distinct++;
+        }
+    }
+    qsort(elems, distinct, sizeof(Element), cmp);
+    for (int i = 0; i < k && i < distinct; i++) {
+        printf("%d ", elems[i].value);
+    }
+    printf("\n");
+
+    return 0;
+}
