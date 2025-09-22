@@ -1,0 +1,81 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define MAX 100
+unsigned long hashFunc(int freq[26]) {
+    unsigned long h = 0;
+    for (int i = 0; i < 26; i++) {
+        h = h * 31 + freq[i];
+    }
+    return h;
+}
+typedef struct Entry {
+    unsigned long key;
+    int count;
+    struct Entry* next;
+} Entry;
+#define HASH_SIZE 100003
+Entry* hashTable[HASH_SIZE];
+void insert(int freq[26]) {
+    unsigned long key = hashFunc(freq);
+    int idx = key % HASH_SIZE;
+    Entry* cur = hashTable[idx];
+    while (cur) {
+        if (cur->key == key) {
+            cur->count++;
+            return;
+        }
+        cur = cur->next;
+    }
+    Entry* newEntry = (Entry*)malloc(sizeof(Entry));
+    newEntry->key = key;
+    newEntry->count = 1;
+    newEntry->next = hashTable[idx];
+    hashTable[idx] = newEntry;
+}
+long long countPairs() {
+    long long ans = 0;
+    for (int i = 0; i < HASH_SIZE; i++) {
+        Entry* cur = hashTable[i];
+        while (cur) {
+            if (cur->count > 1) {
+                ans += (long long)cur->count * (cur->count - 1) / 2;
+            }
+            cur = cur->next;
+        }
+    }
+    return ans;
+}
+void clearHash() {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        Entry* cur = hashTable[i];
+        while (cur) {
+            Entry* tmp = cur;
+            cur = cur->next;
+            free(tmp);
+        }
+        hashTable[i] = NULL;
+    }
+}
+long long sherlockAndAnagrams(char* s) {
+    int n = strlen(s);
+    clearHash();
+    for (int i = 0; i < n; i++) {
+        int freq[26] = {0};
+        for (int j = i; j < n; j++) {
+            freq[s[j] - 'a']++;
+            insert(freq);
+        }
+    }
+    return countPairs();
+}
+int main() {
+    int q;
+    scanf("%d", &q);
+    char s[1005];
+    while (q--) {
+        scanf("%s", s);
+        printf("%lld\n", sherlockAndAnagrams(s));
+    }
+    return 0;
+}
